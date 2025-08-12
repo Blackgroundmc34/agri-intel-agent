@@ -15,8 +15,8 @@ load_dotenv()
 # --- Initialize FastAPI App and CORS ---
 app = FastAPI()
 
-# Allow frontend origin from Vercel
-frontend_origin = os.getenv("FRONTEND_ORIGIN", "*")  # fallback to "*" if not set
+# Allow frontend origin from Vercel or fallback to "*"
+frontend_origin = os.getenv("FRONTEND_ORIGIN", "*")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[frontend_origin],
@@ -103,3 +103,8 @@ def get_farm_analysis(request: FarmDataRequest):
     })
 
     return {"status": "success", "analysis": response.content}
+
+# --- Entry Point for Railway ---
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=int(os.getenv("PORT", 8000)))
