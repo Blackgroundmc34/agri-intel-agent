@@ -15,10 +15,11 @@ load_dotenv()
 # --- Initialize FastAPI App and CORS ---
 app = FastAPI()
 
-# Allow all origins for now (you can restrict this later)
+# Allow frontend origin from Vercel
+frontend_origin = os.getenv("FRONTEND_ORIGIN", "*")  # fallback to "*" if not set
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[frontend_origin],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -42,18 +43,16 @@ def query_tidb_history(location: str, crop: str):
     print(f"MOCK: Querying TiDB for historical data for {location}...")
     return {"historical_precedent": "A similar weather pattern in 2019 led to a downy mildew outbreak."}
 
-# --- Root Endpoint ---
 @app.get("/")
 def read_root():
     return {"message": "Agri-Intel Agent is running!"}
 
-# --- DB Check Endpoint ---
 @app.get("/api/db-check")
 def check_database_connection():
     try:
         connection = mysql.connector.connect(
             host=os.getenv("DB_HOST"),
-            port=os.getenv("DB_PORT"),
+            port=int(os.getenv("DB_PORT", "3306")),
             user=os.getenv("DB_USER"),
             password=os.getenv("DB_PASSWORD"),
             database=os.getenv("DB_NAME")
@@ -66,7 +65,6 @@ def check_database_connection():
     except mysql.connector.Error as err:
         return {"status": "error", "error_message": str(err)}
 
-# --- AI Agent Endpoint ---
 @app.post("/api/get-farm-analysis")
 def get_farm_analysis(request: FarmDataRequest):
     print(f"Received request for analysis: {request}")
