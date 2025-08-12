@@ -20,12 +20,11 @@ export default function Home() {
   const [error, setError] = useState('');
 
   const getAnalysis = async (e) => {
-    e.preventDefault(); // Prevent form submission from reloading the page
+    e.preventDefault();
     setIsLoading(true);
     setAnalysisResult('');
     setError('');
 
-    // A more engaging loading message
     const loadingMessages = [
         "Analyzing weather patterns... 🌦️",
         "Querying satellite imagery... 🛰️",
@@ -38,10 +37,13 @@ export default function Home() {
         messageIndex++;
     }, 1500);
 
-    // Use environment variable for the API URL
+    // This is the crucial fix for production deployments.
+    // We get the API URL from the environment variable.
+    // For local development, it defaults to a local URL.
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
     try {
+      // The API call now uses the dynamic apiUrl.
       const response = await fetch(`${apiUrl}/api/get-farm-analysis`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -51,7 +53,7 @@ export default function Home() {
         }),
       });
 
-      clearInterval(interval); // Stop the loading messages
+      clearInterval(interval);
 
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
@@ -61,10 +63,10 @@ export default function Home() {
       setAnalysisResult(data.analysis);
 
     } catch (err) {
-      clearInterval(interval); // Also stop on error
+      clearInterval(interval);
       console.error(err);
       setError('Failed to connect to the Agri-Intel agent. Please ensure it is running and accessible.');
-      setAnalysisResult(''); // Clear any loading messages
+      setAnalysisResult('');
     } finally {
       setIsLoading(false);
     }
