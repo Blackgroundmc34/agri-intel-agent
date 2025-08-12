@@ -21,12 +21,11 @@ app = FastAPI()
 frontend_origin = os.getenv("FRONTEND_ORIGIN", "*")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[frontend_origin],
+    allow_origins=["*"],  # Allow all for testing
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["*"],  # Allow all HTTP methods
     allow_headers=["*"],
 )
-
 
 # --- Pydantic Model for API Input ---
 class FarmDataRequest(BaseModel):
