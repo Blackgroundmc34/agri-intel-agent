@@ -1,5 +1,4 @@
 // frontend/app/page.tsx
-
 'use client';
 
 import React, { useState } from 'react';
@@ -24,12 +23,13 @@ export default function Home() {
     setAnalysisResult('');
     setError('');
 
-    loadingMessages = [
+    const loadingMessages: string[] = [
       "Analyzing weather patterns... 🌦️",
       "Querying satellite imagery... 🛰️",
       "Synthesizing soil data from TiDB... 🌱",
       "Compiling risk assessment... 📝",
     ];
+
     let messageIndex = 0;
     const interval = setInterval(() => {
       setAnalysisResult(loadingMessages[messageIndex % loadingMessages.length]);
