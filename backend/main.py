@@ -21,9 +21,9 @@ frontend_origin = os.getenv("FRONTEND_ORIGIN", "https://agri-intel-agent.vercel.
 origins = [frontend_origin, "https://agri-intel-agent.vercel.app/"] # Allow both local and deployed frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],  # Allow all for testing
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["*"],  # Allow all HTTP methods
     allow_headers=["*"],
 )
 
