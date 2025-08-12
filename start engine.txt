@@ -1,0 +1,8 @@
+# Move from the frontend folder up one level, and then into the backend folder
+cd ../backend
+
+# Activate the Python virtual environment (very important!)
+source venv/Scripts/activate
+
+# Now, run the uvicorn server from the correct directory
+uvicorn main:app --reload

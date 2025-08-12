@@ -4,58 +4,140 @@
 
 import { useState } from 'react';
 
+// Simple SVG spinner component for loading states
+const Spinner = () => (
+  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+  </svg>
+);
+
 export default function Home() {
+  const [farmLocation, setFarmLocation] = useState('Stellenbosch');
+  const [cropType, setCropType] = useState('Chenin Blanc Grapes');
   const [analysisResult, setAnalysisResult] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  // This function calls our new AI agent endpoint
-  const getAnalysis = async () => {
+  const getAnalysis = async (e) => {
+    e.preventDefault(); // Prevent form submission from reloading the page
     setIsLoading(true);
-    setAnalysisResult('The agent is thinking... synthesizing data from weather, satellite, and TiDB...');
+    setAnalysisResult('');
+    setError('');
+
+    // A more engaging loading message
+    const loadingMessages = [
+        "Analyzing weather patterns... 🌦️",
+        "Querying satellite imagery... 🛰️",
+        "Synthesizing soil data from TiDB... 🌱",
+        "Compiling risk assessment... 📝",
+    ];
+    let messageIndex = 0;
+    const interval = setInterval(() => {
+        setAnalysisResult(loadingMessages[messageIndex % loadingMessages.length]);
+        messageIndex++;
+    }, 1500);
+
 
     try {
       const response = await fetch('http://127.0.0.1:8000/api/get-farm-analysis', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          farm_location: 'Stellenbosch', // Sending mock data from frontend
-          crop_type: 'Chenin Blanc Grapes',
+          farm_location: farmLocation,
+          crop_type: cropType,
         }),
       });
+
+      clearInterval(interval); // Stop the loading messages
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
       const data = await response.json();
       setAnalysisResult(data.analysis);
 
-    } catch (error) {
-      setAnalysisResult('Failed to connect to the backend agent. Is it running?');
+    } catch (err) {
+      clearInterval(interval); // Also stop on error
+      setError('Failed to connect to the Agri-Intel agent. Please ensure it is running and accessible.');
+      setAnalysisResult(''); // Clear any loading messages
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24 bg-gray-900 text-white">
-      <div className="text-center w-full max-w-2xl">
-        <h1 className="text-4xl font-bold mb-4">Agri-Intel Agent</h1>
-        <p className="text-lg text-gray-400 mb-8">
-          Your AI Agronomist for Precision Farming
-        </p>
+    <main className="flex min-h-screen flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 p-4 sm:p-8 transition-colors duration-300">
+      <div className="w-full max-w-3xl bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
+        <div className="p-8 sm:p-12">
+          {/* Header Section */}
+          <div className="text-center mb-10">
+            <h1 className="text-4xl sm:text-5xl font-bold text-gray-800 dark:text-white">
+              Agri-Intel Agent 🌱
+            </h1>
+            <p className="mt-3 text-lg text-gray-600 dark:text-gray-400">
+              Your AI Agronomist for Precision Farming
+            </p>
+          </div>
 
-        <button
-          onClick={getAnalysis}
-          disabled={isLoading}
-          className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition-colors"
-        >
-          {isLoading ? 'Analyzing...' : 'Run Farm Risk Analysis'}
-        </button>
+          {/* Input Form Section */}
+          <form onSubmit={getAnalysis} className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div>
+                <label htmlFor="farm_location" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Farm Location
+                </label>
+                <input
+                  type="text"
+                  id="farm_location"
+                  value={farmLocation}
+                  onChange={(e) => setFarmLocation(e.target.value)}
+                  className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"
+                  placeholder="e.g., Stellenbosch"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="crop_type" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Crop Type
+                </label>
+                <input
+                  type="text"
+                  id="crop_type"
+                  value={cropType}
+                  onChange={(e) => setCropType(e.target.value)}
+                  className="w-full px-4 py-3 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"
+                  placeholder="e.g., Chenin Blanc Grapes"
+                  required
+                />
+              </div>
+            </div>
 
-        <div className="mt-8 p-6 bg-gray-800 rounded-lg min-h-[12rem] text-left whitespace-pre-wrap">
-          <p className="text-md font-mono text-gray-300">
-            {analysisResult || 'Click the button to get your farm analysis.'}
-          </p>
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full flex justify-center items-center px-6 py-4 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition-all duration-300 ease-in-out transform hover:scale-105"
+            >
+              {isLoading ? <Spinner /> : null}
+              {isLoading ? 'Analyzing...' : 'Run Farm Risk Analysis'}
+            </button>
+          </form>
+
+          {/* Results Section */}
+          <div className="mt-10">
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">Analysis Report</h2>
+            <div className="p-6 bg-gray-100 dark:bg-gray-900/50 rounded-lg min-h-[14rem] text-left whitespace-pre-wrap font-mono text-gray-700 dark:text-gray-300 overflow-y-auto">
+              {error && <p className="text-red-500 font-semibold">{error}</p>}
+              {!error && (analysisResult || <p className="text-gray-500 dark:text-gray-400">Your farm analysis will appear here once generated.</p>)}
+            </div>
+          </div>
         </div>
       </div>
+       <footer className="text-center mt-8 text-gray-500 dark:text-gray-400 text-sm">
+          <p>Powered by TiDB, Vercel, and Google AI</p>
+      </footer>
     </main>
   );
 }
