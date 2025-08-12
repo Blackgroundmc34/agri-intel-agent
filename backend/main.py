@@ -17,8 +17,8 @@ load_dotenv()
 # --- Initialize FastAPI App and CORS ---
 app = FastAPI()
 
-frontend_origin = os.getenv("FRONTEND_ORIGIN", "https://agri-intel-agent.vercel.app/")
-origins = [frontend_origin, "https://agri-intel-agent.vercel.app/"] # Allow both local and deployed frontend
+frontend_origin = os.getenv("FRONTEND_ORIGIN", "https://agri-intel-agent.vercel.app")
+origins = [frontend_origin, "https://agri-intel-agent.vercel.app"] # Allow both local and deployed frontend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Allow all for testing
