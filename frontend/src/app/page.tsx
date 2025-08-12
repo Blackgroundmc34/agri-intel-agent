@@ -1,10 +1,9 @@
-// frontend/app/page.js
+// frontend/app/page.tsx
 
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 
-// Simple SVG spinner component for loading states
 const Spinner = () => (
   <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -13,34 +12,32 @@ const Spinner = () => (
 );
 
 export default function Home() {
-  const [farmLocation, setFarmLocation] = useState('Stellenbosch');
-  const [cropType, setCropType] = useState('Chenin Blanc Grapes');
-  const [analysisResult, setAnalysisResult] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [farmLocation, setFarmLocation] = useState<string>('Stellenbosch');
+  const [cropType, setCropType] = useState<string>('Chenin Blanc Grapes');
+  const [analysisResult, setAnalysisResult] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>('');
 
-  const getAnalysis = async (e) => {
-    e.preventDefault(); // Prevent form submission from reloading the page
+  const getAnalysis = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsLoading(true);
     setAnalysisResult('');
     setError('');
 
-    // A more engaging loading message
-    const loadingMessages = [
-        "Analyzing weather patterns... 🌦️",
-        "Querying satellite imagery... 🛰️",
-        "Synthesizing soil data from TiDB... 🌱",
-        "Compiling risk assessment... 📝",
+    loadingMessages = [
+      "Analyzing weather patterns... 🌦️",
+      "Querying satellite imagery... 🛰️",
+      "Synthesizing soil data from TiDB... 🌱",
+      "Compiling risk assessment... 📝",
     ];
     let messageIndex = 0;
     const interval = setInterval(() => {
-        setAnalysisResult(loadingMessages[messageIndex % loadingMessages.length]);
-        messageIndex++;
+      setAnalysisResult(loadingMessages[messageIndex % loadingMessages.length]);
+      messageIndex++;
     }, 1500);
 
-
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/get-farm-analysis', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/get-farm-analysis`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -49,7 +46,7 @@ export default function Home() {
         }),
       });
 
-      clearInterval(interval); // Stop the loading messages
+      clearInterval(interval);
 
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
@@ -57,11 +54,10 @@ export default function Home() {
 
       const data = await response.json();
       setAnalysisResult(data.analysis);
-
     } catch (err) {
-      clearInterval(interval); // Also stop on error
+      clearInterval(interval);
       setError('Failed to connect to the Agri-Intel agent. Please ensure it is running and accessible.');
-      setAnalysisResult(''); // Clear any loading messages
+      setAnalysisResult('');
     } finally {
       setIsLoading(false);
     }
@@ -71,7 +67,6 @@ export default function Home() {
     <main className="flex min-h-screen flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 p-4 sm:p-8 transition-colors duration-300">
       <div className="w-full max-w-3xl bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
         <div className="p-8 sm:p-12">
-          {/* Header Section */}
           <div className="text-center mb-10">
             <h1 className="text-4xl sm:text-5xl font-bold text-gray-800 dark:text-white">
               Agri-Intel Agent 🌱
@@ -81,7 +76,6 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Input Form Section */}
           <form onSubmit={getAnalysis} className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
@@ -114,7 +108,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Submit Button */}
             <button
               type="submit"
               disabled={isLoading}
@@ -125,7 +118,6 @@ export default function Home() {
             </button>
           </form>
 
-          {/* Results Section */}
           <div className="mt-10">
             <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">Analysis Report</h2>
             <div className="p-6 bg-gray-100 dark:bg-gray-900/50 rounded-lg min-h-[14rem] text-left whitespace-pre-wrap font-mono text-gray-700 dark:text-gray-300 overflow-y-auto">
@@ -135,8 +127,8 @@ export default function Home() {
           </div>
         </div>
       </div>
-       <footer className="text-center mt-8 text-gray-500 dark:text-gray-400 text-sm">
-          <p>Powered by TiDB, Vercel, and Google AI</p>
+      <footer className="text-center mt-8 text-gray-500 dark:text-gray-400 text-sm">
+        <p>Powered by TiDB, Vercel, and Google AI</p>
       </footer>
     </main>
   );
