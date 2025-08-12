@@ -18,6 +18,7 @@ load_dotenv()
 app = FastAPI(title="Agri-Intel Agent Backend")
 
 # --- CORS Middleware ---
+# Load FRONTEND_ORIGIN from environment variables. It's crucial this is set correctly in Railway.
 frontend_origin = os.getenv("FRONTEND_ORIGIN", "http://localhost:3000")
 origins = [frontend_origin, "http://localhost:3000"]
 
@@ -69,8 +70,10 @@ def query_tidb_history(location: str, crop: str) -> dict:
             return {"historical_precedent": "No similar historical data found in TiDB."}
 
     except mysql.connector.Error as err:
-        print(f"TiDB connection error: {err}")
-        return {"historical_precedent": f"Error querying historical data from TiDB: {err}"}
+        # Capture and report the specific database error
+        error_message = f"TiDB connection or query error: {err}"
+        print(error_message)
+        return {"historical_precedent": error_message}
 
 # --- Health Check Endpoint ---
 @app.get("/")
@@ -84,26 +87,31 @@ def get_farm_analysis(request: FarmDataRequest):
     weather_data = get_weather_data(request.farm_location)
     satellite_data = get_satellite_data(request.farm_location)
     historical_data = query_tidb_history(request.farm_location, request.crop_type)
-    llm = ChatOpenAI(model="gpt-4o", openai_api_key=os.getenv("OPENAI_API_KEY"))
-    prompt_template = ChatPromptTemplate.from_template(
-        """
-        You are an expert AI agronomist for farmers in the Western Cape, South Africa.
-        Your task is to provide a clear, actionable recommendation based on the data provided.
+    
+    # Check for errors from data sources before invoking the LLM
+    if "error" in historical_data.get("historical_precedent", "").lower():
+        raise HTTPException(status_code=500, detail=historical_data["historical_precedent"])
 
-        DATA:
-        - Location: {location}
-        - Crop Type: {crop_type}
-        - 14-Day Weather Forecast: {weather}
-        - Satellite NDVI Analysis: {satellite}
-        - Historical Precedent from TiDB: {history}
-
-        Based on all of this data, provide a "Risk Assessment" and a "Recommended Action".
-        Format your response clearly and concisely.
-        """
-    )
-    chain = prompt_template | llm
-    print("Invoking AI agent...")
     try:
+        llm = ChatOpenAI(model="gpt-4o", openai_api_key=os.getenv("OPENAI_API_KEY"))
+        prompt_template = ChatPromptTemplate.from_template(
+            """
+            You are an expert AI agronomist for farmers in the Western Cape, South Africa.
+            Your task is to provide a clear, actionable recommendation based on the data provided.
+
+            DATA:
+            - Location: {location}
+            - Crop Type: {crop_type}
+            - 14-Day Weather Forecast: {weather}
+            - Satellite NDVI Analysis: {satellite}
+            - Historical Precedent from TiDB: {history}
+
+            Based on all of this data, provide a "Risk Assessment" and a "Recommended Action".
+            Format your response clearly and concisely.
+            """
+        )
+        chain = prompt_template | llm
+        print("Invoking AI agent...")
         response = chain.invoke({
             "location": request.farm_location,
             "crop_type": request.crop_type,
@@ -114,8 +122,10 @@ def get_farm_analysis(request: FarmDataRequest):
         print("AI response received.")
         return {"status": "success", "analysis": response.content}
     except Exception as e:
+        # Return a more specific error message from the exception
+        error_detail = f"LLM or data processing error: {e}"
         print(f"Error invoking LLM: {e}")
-        raise HTTPException(status_code=500, detail=f"LLM error: {e}")
+        raise HTTPException(status_code=500, detail=error_detail)
 
 # --- Entry Point for Uvicorn ---
 if __name__ == "__main__":
