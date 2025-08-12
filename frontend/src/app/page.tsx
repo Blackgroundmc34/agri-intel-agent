@@ -1,4 +1,4 @@
-// frontend/app/page.js
+// frontend/app/page.tsx
 
 'use client';
 
@@ -13,13 +13,14 @@ const Spinner = () => (
 );
 
 export default function Home() {
-  const [farmLocation, setFarmLocation] = useState('Stellenbosch');
-  const [cropType, setCropType] = useState('Chenin Blanc Grapes');
-  const [analysisResult, setAnalysisResult] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  // Use TypeScript to define state types
+  const [farmLocation, setFarmLocation] = useState<string>('Stellenbosch');
+  const [cropType, setCropType] = useState<string>('Chenin Blanc Grapes');
+  const [analysisResult, setAnalysisResult] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>('');
 
-  const getAnalysis = async (e) => {
+  const getAnalysis = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setAnalysisResult('');
@@ -29,7 +30,7 @@ export default function Home() {
         "Analyzing weather patterns... 🌦️",
         "Querying satellite imagery... 🛰️",
         "Synthesizing soil data from TiDB... 🌱",
-        "Compiling risk assessment... 📝",
+        "Compiling risk assessment... �",
     ];
     let messageIndex = 0;
     const interval = setInterval(() => {
@@ -37,13 +38,9 @@ export default function Home() {
         messageIndex++;
     }, 1500);
 
-    // This is the crucial fix for production deployments.
-    // We get the API URL from the environment variable.
-    // For local development, it defaults to a local URL.
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
     try {
-      // The API call now uses the dynamic apiUrl.
       const response = await fetch(`${apiUrl}/api/get-farm-analysis`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -56,6 +53,8 @@ export default function Home() {
       clearInterval(interval);
 
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API Error Response:', errorText);
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
 
@@ -64,7 +63,7 @@ export default function Home() {
 
     } catch (err) {
       clearInterval(interval);
-      console.error(err);
+      console.error('Fetch Error:', err);
       setError('Failed to connect to the Agri-Intel agent. Please ensure it is running and accessible.');
       setAnalysisResult('');
     } finally {
