@@ -152,4 +152,4 @@ def get_farm_analysis(request: FarmDataRequest):
 # --- Entry Point for Railway ---
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=int(os.getenv("PORT", 8000)))
+    uvicorn.run("main:app", host="0.0.0.0", port=int(os.getenv("PORT", 8080)))
