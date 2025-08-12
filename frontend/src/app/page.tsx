@@ -29,8 +29,8 @@ export default function Home() {
     const loadingMessages = [
         "Analyzing weather patterns... 🌦️",
         "Querying satellite imagery... 🛰️",
-        "Synthesizing soil data from TiDB... 🌱",
-        "Compiling risk assessment... �",
+        "Synthesizing soil data from TiDB... �",
+        "Compiling risk assessment... 📝",
     ];
     let messageIndex = 0;
     const interval = setInterval(() => {
@@ -41,7 +41,9 @@ export default function Home() {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
     try {
-      const response = await fetch(`${apiUrl}/api/get-farm-analysis`, {
+      // The fix is here: remove the leading slash from the path.
+      // Use string interpolation to construct the URL without a double slash.
+      const response = await fetch(`${apiUrl}api/get-farm-analysis`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -145,3 +147,4 @@ export default function Home() {
     </main>
   );
 }
+�
