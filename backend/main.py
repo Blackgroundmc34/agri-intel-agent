@@ -17,13 +17,16 @@ load_dotenv()
 # --- Initialize FastAPI App and CORS ---
 app = FastAPI()
 
-frontend_origin = os.getenv("FRONTEND_ORIGIN", "https://agri-intel-agent.vercel.app")
-origins = [frontend_origin, "https://agri-intel-agent.vercel.app"] # Allow both local and deployed frontend
+# Read the frontend origin from environment variables for production security.
+# This prevents unauthorized domains from making requests.
+frontend_origin = os.getenv("FRONTEND_ORIGIN", "http://localhost:3000")
+origins = [frontend_origin, "http://localhost:3000"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all for testing
+    allow_origins=origins, # Use the defined origins list
     allow_credentials=True,
-    allow_methods=["*"],  # Allow all HTTP methods
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
@@ -32,23 +35,22 @@ class FarmDataRequest(BaseModel):
     farm_location: str
     crop_type: str
 
-# --- Data Functions (Real-World) ---
+# --- Data Functions (Real-World placeholders) ---
 
 def get_weather_data(location: str) -> dict:
     """
-    Fetches real-time weather data for a given location using an external API.
+    Placeholder function to fetch real-time weather data.
+    Replace with a real API call.
     """
-    # This function is a placeholder. You will need to replace this with a real API call.
-    # For a real API, remember to handle API keys and parse the response.
     print(f"Fetching mock weather data for {location}")
     return {"forecast": "14-day forecast shows high humidity and rising temperatures."}
 
 
 def get_satellite_data(location: str) -> dict:
     """
-    Fetches real-time satellite imagery data (e.g., NDVI) for a location.
+    Placeholder function to fetch real-time satellite imagery data.
+    Replace with a real API call.
     """
-    # This function is a placeholder. You will need to replace this with a real API call.
     print(f"Fetching mock satellite data for {location}")
     return {"ndvi_analysis": "NDVI readings indicate moderate plant stress in Block B."}
 
@@ -56,6 +58,7 @@ def get_satellite_data(location: str) -> dict:
 def query_tidb_history(location: str, crop: str) -> dict:
     """
     Connects to TiDB Serverless, queries historical data, and uses vector search.
+    This function should be replaced with your vector search logic.
     """
     try:
         connection = mysql.connector.connect(
@@ -68,7 +71,6 @@ def query_tidb_history(location: str, crop: str) -> dict:
         )
         cursor = connection.cursor(buffered=True)
 
-        # Your TiDB vector search logic would go here.
         query = "SELECT historical_precedent_column FROM historical_data WHERE location = %s AND crop = %s LIMIT 1"
         cursor.execute(query, (location, crop))
         result = cursor.fetchone()
